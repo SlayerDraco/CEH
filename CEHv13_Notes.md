@@ -25,6 +25,14 @@ Examples:
 Prevent denial of actions.
 Examples:
 * Digital Signatures
+### ⚠️ Confidentiality ≠ Authentication
+* **Confidentiality** → *who is allowed to see* the data.
+* **Authentication** → *whether the source/identity is genuine*.
+Both can appear in the same question — decide which one is being asked.
+## Security, Functionality & Ease-of-Use Triangle
+The three pull against each other:
+> As **security** increases, **functionality** and **ease of use** decrease.
+More controls = less convenience. Expect scenario questions on this trade-off.
 ---
 # 2. Attack Classifications
 ### Attacks vs Security Properties
@@ -42,6 +50,15 @@ Examples:
 |Close-in|Attacker physically near target (shoulder surfing, dumpster diving)|
 |Insider|Trusted person misuses access|
 |Distribution|Tampering with hardware/software before delivery (supply chain)|
+### Attack Terminology
+|Term|Meaning|
+|---|---|
+|Inside Attack|Originates from **inside** the security boundary|
+|Outside Attack|Originates from **outside** the network|
+|Daisy Chaining|Use one compromised system to reach the next|
+|Shrink-Wrap Attack|Exploit default code/config in off-the-shelf software|
+|Phreaker|Attacker targeting telephone/telecom systems|
+|Bot / Zombie|Compromised machine under remote control|
 ---
 # 3. Active vs Passive Attacks
 ### Passive
@@ -86,6 +103,21 @@ Examples:
 1. Maintaining Access
 1. Covering Tracks
 ### "Really Smart Guys Make Cash"
+## Testing Knowledge Levels (Box Types)
+|Type|Knowledge|Models|
+|---|---|---|
+|Black Box|No prior knowledge|External attacker|
+|White Box|Full knowledge|Internal / knowledgeable threat|
+|Gray Box|Partial knowledge|Trusted user / partially informed|
+#### ⚠️ Box type ≠ hat colour. A **white-hat** ethical hacker can perform a **black-box** test.
+## Rules of Engagement (RoE) / Authorization
+What makes hacking *ethical* is **explicit written permission** + defined limits:
+* Signed authorization / scope agreement
+* NDA
+* Allowed targets & boundaries
+* Timing window
+* Agreed test type
+Same technical action = legal with authorization, illegal without it.
 ---
 # 7. Cyber Kill Chain
 1. Reconnaissance
@@ -240,6 +272,12 @@ Using advanced Google search operators to discover exposed information.
 |inurl:|Search URLs|
 |intext:|Search page contents|
 #### Google Hacking Database (GHDB) is a Collection of known Google Dorks.
+### Search-Engine Footprinting Beyond Google
+Footprinting uses many sources, not just Google:
+* Other engines (Bing, DuckDuckGo), cached/indexed pages
+* Job portals (reveal tech stack), social platforms
+* Public documents & metadata, people-search and public databases
+* **Shodan / Censys** → Internet-connected devices
 ---
 # 19. WHOIS Footprinting
 ## Definition
@@ -267,6 +305,17 @@ Hides ownership details. It does **NOT** hide the domain itself.
 |TXT|Text Information|
 |SOA|Start of Authority|
 #### "**An** **A**ngry **M**ailman **N**amed **C**arl **P**refers **T**extbooks **S**ometimes”
+## DNS Lookup Tools
+|Tool|Use|
+|---|---|
+|`nslookup`|Query records; has **interactive mode** (`set type=MX`)|
+|`dig`|Linux query tool; `dig MX example.com`, `dig axfr`|
+|`host`|Quick record lookup|
+Know you can query a **specific record type** and read the output.
+## DNS Zone Transfer (AXFR)
+Copies the **entire DNS zone** (all hosts + records) — a big info leak if allowed to anyone.
+* Test: `dig axfr @nameserver domain` / `nslookup` → `ls -d`
+* **Countermeasure:** restrict AXFR to authorized secondary servers only.
 ---
 # 21. Network Footprinting
 ## Main Techniques
@@ -287,6 +336,15 @@ IP → MAC
 MAC → IP
 ### Traceroute
 Uses TTL and ICMP Time Exceeded.
+* **Windows:** `tracert` (uses ICMP by default)
+* **Linux/Unix:** `traceroute` (uses UDP by default; `-I` for ICMP)
+* Output/behavior differs because the probe protocol differs.
+### ICMP Firewall Clue — Type 3, Code 13
+**ICMP Type 3 = Destination Unreachable.**
+**Code 13 = Communication Administratively Prohibited** → a **firewall/ACL is filtering** the traffic (not that the host is down). High-yield exam fact.
+### War Dialing / Modem Discovery
+Scanning phone lines for dial-in modems (recognition-level tools):
+ToneLoc, THC-Scan, WarVox (VoIP), PAWS, TeleSweep.
 ---
 # 22. Email Foot printing
 ## Email Protocols
@@ -301,6 +359,12 @@ Uses TTL and ICMP Time Exceeded.
 |SPF|Authorized Senders|
 |DKIM|Integrity + Authenticity|
 |DMARC|Authentication Policy|
+### Email Headers as a Recon Source
+Full headers reveal more than the visible From/To:
+* Originating IP & mail-server hops (`Received:`)
+* Mail software/infrastructure
+* Timestamps & routing path
+Useful for mapping infrastructure and spotting spoofing.
 ---
 # 23. Website Foot printing
 ### Important Files
@@ -407,6 +471,24 @@ The process of identifying **live hosts** before performing port scanning.
 * ARP works **only on Local Networks (LAN)**.
 * ARP is more reliable than ICMP inside LAN.
 * ICMP may be blocked by firewalls.
+## Nmap Options Cheat-Sheet (High-Yield)
+|Option|Purpose|
+|---|---|
+|`-sn`|Host discovery only (no port scan)|
+|`-Pn`|Skip host discovery; treat all as online (bypass ICMP block)|
+|`-sT`|TCP connect scan|
+|`-sS`|SYN / half-open scan|
+|`-sU`|UDP scan|
+|`-sA`|ACK scan (firewall filtering map)|
+|`-sF` / `-sN` / `-sX`|FIN / NULL / XMAS|
+|`-sV`|Service/version detection|
+|`-O`|OS detection|
+|`-A`|Aggressive (OS + version + scripts + traceroute)|
+|`-p` / `-p-`|Specific ports / all 65535 TCP ports|
+|`-T0`–`-T5`|Timing (0 = slowest/stealthy, 5 = fastest)|
+|`-D`|Decoy scan|
+|`-f`|Fragment packets|
+|`-oN/-oX/-oG`|Output normal / XML / grepable|
 ---
 # 28. Port Scanning Fundamentals
 ## Definition
@@ -419,6 +501,17 @@ Process of identifying **open services** running on a host.
 |Filtered|Firewall Blocking|
 ### TCP 3-Way Handshake
 SYN ——————————> SYN/ACK ——————————> ACK
+### TCP Flags (know these for scan questions)
+|Flag|Meaning|
+|---|---|
+|SYN|Start/synchronize a connection|
+|ACK|Acknowledge received data|
+|SYN/ACK|Server agrees + proposes sequence number|
+|RST|Reset / refuse connection|
+|FIN|Graceful termination|
+|PSH|Push buffered data to the application now|
+|URG|Urgent data present (urgent pointer)|
+Mnemonic for the 6 control flags: **"Unskilled Attackers Pester Real Security Folks"** (URG, ACK, PSH, RST, SYN, FIN).
 ---
 # 29. TCP Connect Scan (-sT)
 ## Definition
@@ -523,9 +616,11 @@ Uses:
 ### Default TTL Values
 |OS|TTL|
 |---|---|
-|Linux|64|
+|Linux/Unix|64|
 |Windows|128|
-|Cisco|255|
+|Cisco/Network gear|255|
+#### ⚠️ TTL is a **clue, not proof**
+Default TTL values are *starting points*. Routing hops decrement TTL, and config/device type can change it, so OS detection combines TTL **with** window size, TCP flag behavior, and ICMP responses — never TTL alone.
 ---
 # 36. Nmap Scripting Engine (NSE)
 ## Definition
@@ -560,6 +655,8 @@ Nmap feature that automates scanning using scripts.
 |`--source-port`|Source Port Spoof|
 |`--spoof-mac`|MAC Spoof|
 |`-T0` to `-T5`|Timing|
+### ⚠️ IP Spoofing Has a Big Limitation
+If you spoof the **source IP**, replies go to the **spoofed address, not to you**. So spoofing hides identity but breaks normal two-way interaction — it is **not** invisibility in a real session. (It's useful for decoys, reflection, blind attacks.)
 ---
 # 38. Scanning Countermeasures
 ## Defensive Controls
@@ -575,6 +672,8 @@ Nmap feature that automates scanning using scripts.
 |Banner Disclosure|Banner Hiding|
 |Fast Scanning|Rate Limiting|
 |Suspicious Activity|Logging & Monitoring|
+### ⚠️ Legal Note
+Port scanning can be detected and, depending on jurisdiction/impact, is a legal gray area. CEH rule: **only scan systems you are authorized to scan.**
 ---
 ---
 # 39. Enumeration
@@ -617,12 +716,25 @@ Enumerate Windows network information.
 |nbtscan|Linux Enumeration|
 |enum4linux|Advanced Enumeration|
 |Nmap NSE|NetBIOS Information|
-### Important NetBIOS Suffixes
+### Important NetBIOS Suffixes (Name Codes)
 |Suffix|Meaning|
 |---|---|
-|<00>|Workstation|
-|<20>|File Server|
-|<1C>|Domain Controllers|
+|<00>|Workstation Service|
+|<03>|Messenger Service (logged-on user)|
+|<20>|File Server Service|
+|<1B>|Domain Master Browser|
+|<1C>|Domain Controllers (group)|
+|<1D>|Master Browser|
+|<1E>|Browser Service Elections|
+### `nbtstat` Operations
+|Command|Purpose|
+|---|---|
+|`nbtstat -a <name>`|Remote machine's NetBIOS name table (by name)|
+|`nbtstat -A <IP>`|Same, but by IP address|
+|`nbtstat -c`|Local NetBIOS name cache|
+|`nbtstat -n`|Local NetBIOS names|
+|`nbtstat -r`|Names resolved via broadcast/WINS|
+|`nbtstat -S`|Active NetBIOS sessions|
 ---
 # 41. SMB Enumeration
 ## Purpose
@@ -644,7 +756,14 @@ Enumerate Windows file sharing and domain information.
 |---|---|
 |C$|System Drive|
 |ADMIN$|Windows Directory|
-|IPC$|Inter-Process Communication|
+|IPC$|Inter-Process Communication (null-session target)|
+### `net view` Enumeration
+|Command|Purpose|
+|---|---|
+|`net view \\<computer>`|List shared resources on a host|
+|`net view \\<computer> /ALL`|Include hidden shares where supported|
+|`net view /domain`|Domains/workgroups visible|
+|`net view /domain:<name>`|Hosts/shares in a specific domain|
 ---
 # 42. SNMP Enumeration
 ## Purpose
@@ -722,7 +841,18 @@ Enumerate valid email users.
 |---|---|
 |HELO|Start Session|
 |EHLO|Extended HELO|
-|VRFY|Verify User|
+|VRFY|Verify a user/mailbox exists|
+|EXPN|Expand a mailing list / alias|
+|RCPT TO|Reveal whether a recipient is accepted|
+#### Modern servers usually disable/restrict VRFY and EXPN.
+### What Each Service Reveals (don't lump "enumeration" together)
+|Service|Exposes|
+|---|---|
+|LDAP/AD|Users, groups, directory objects|
+|NTP|Time, server list, connected hosts|
+|DNS|Hosts, records, possibly zone data|
+|NFS|Exported/shared file systems|
+|SNMP|Device config, interfaces, routes|
 ---
 # 46. RPC & NFS Enumeration
 ### RPC
@@ -802,6 +932,15 @@ Systematic process of identifying, classifying, prioritizing, and validating sec
 * Human Error
 * Legacy Software
 * Third-party Libraries
+### Vulnerability Classification (major classes)
+|Class|Examples|
+|---|---|
+|Misconfiguration|Default settings, open ports, verbose errors|
+|Application Flaws|Injection, poor input validation|
+|Poor Patch Management|Outdated/unpatched systems|
+|Default Credentials|Vendor default user/pass left enabled|
+|Design Flaws|Insecure logic/architecture|
+|Third-Party Risks|Vulnerable libraries/vendor integrations|
 ---
 # 49. Vulnerability Management Lifecycle
 ## Purpose
@@ -893,6 +1032,13 @@ Contains:
 * Exploit Code
 * Local & Remote Exploits
 #### Zero-Day is a vulnerability for which **no patch is available**.
+### ⚠️ Don't Confuse CVE / CVSS / Advisory
+|Item|Role|
+|---|---|
+|**CVE**|Standard **ID** for one vulnerability (MITRE)|
+|**CVSS**|**Severity score** 0–10 (FIRST)|
+|**Security Advisory**|Vendor/researcher write-up + remediation|
+CVE = *which* vulnerability. CVSS = *how bad*. They are not the same thing.
 ---
 # 52. Vulnerability Assessment Types
 ## Assessment Types
@@ -1021,6 +1167,13 @@ Executive Summary —> Scope —> Methodology —> Findings —> Risk Rating —
 * Patch Compliance
 * Critical Findings
 * False Positive Rate
+## False Positive vs False Negative
+|Term|Meaning|
+|---|---|
+|False Positive|Tool reports a vuln that isn't really there (wasted effort)|
+|False Negative|Real vuln is **missed** (dangerous — false sense of security)|
+## Report Quality
+A good finding connects **technical issue → business impact → specific remediation**, with evidence that makes it reproducible/defensible.
 ---
 # 58. Vulnerability Validation & Penetration Testing
 ## Vulnerability Assessment vs Penetration Testing
