@@ -1932,7 +1932,8 @@ Application —> TCP Header —> IP Header —> Ethernet Header —> Bits
 ---
 # 82. ARP Protocol & ARP Spoofing
 ## ARP
-Maps **IP → MAC**
+Maps **IPv4 → MAC** on the **local Layer-2 network only**.
+#### ⚠️ ARP is **not** routable across the Internet and does **not** handle IPv6 — IPv6 uses **NDP (Neighbor Discovery Protocol)** instead.
 ## ARP Process
 Broadcast ARP Request —> Unicast ARP Reply —> ARP Cache Update
 ## ARP Spoofing
@@ -2049,6 +2050,28 @@ Three Panes
 * Packet List
 * Packet Details
 * Packet Bytes
+### Wireshark Display Filters (know these)
+|Filter|Shows|
+|---|---|
+|`ip.addr == 10.0.0.5`|Traffic to/from a host|
+|`tcp.port == 80`|Traffic on a port|
+|`http` / `dns` / `arp`|By protocol|
+|`tcp.flags.syn == 1`|SYN packets (scan detection)|
+|`ip.src == x && ip.dst == y`|Directional filter|
+#### Capture filter (BPF) vs display filter: capture filters limit what's recorded; display filters just hide/show captured packets.
+## SPAN Port / Port Mirroring
+Switch feature that **copies traffic** from selected ports/VLANs to a monitor port so an analyzer can see it (switches normally isolate traffic). A legitimate way to sniff a switched network.
+## Hardware Protocol Analyzers
+Dedicated appliances that capture/decode traffic (incl. high-speed Ethernet/Fibre Channel) — more capable than software sniffers for heavy environments.
+## Wiretapping
+* **Active wiretapping** → inject/alter traffic.
+* **Passive wiretapping** → only monitor/record.
+* **Lawful interception** → authorized, legal monitoring by agencies. Unauthorized wiretapping is illegal — not "admin sniffing."
+## Snort (IDS) Basics
+Open-source IDS/IPS using rule signatures.
+* Rule format: `action proto src_ip src_port -> dst_ip dst_port (options)`
+* Example: `alert tcp any any -> 10.0.0.0/24 80 (msg:"HTTP"; sid:1000001;)`
+* Recognize the action, protocol, ports, and direction (`->`) in output.
 ---
 # 87. Detecting & Preventing Sniffing
 ## Detect
@@ -2099,15 +2122,18 @@ Targets:
 * Financial Information
 * Physical Access
 * Confidential Data
-## Why It Works
-Attackers exploit human emotions:
-* Trust
-* Fear
-* Urgency
-* Curiosity
-* Greed
-* Sympathy
-* Authority
+## Why It Works — Psychological Triggers
+Scenario questions describe the behavior without naming it:
+|Trigger|Lever|
+|---|---|
+|Authority|"I'm from IT/the CEO"|
+|Intimidation|Threats/pressure|
+|Consensus / Social Proof|"Everyone else did it"|
+|Scarcity|"Only a few left"|
+|Urgency|"Act now or lose access"|
+|Familiarity / Liking|Builds rapport first|
+|Trust|Poses as a trusted party|
+|Greed|Promise of reward/money|
 ## Social Engineering Lifecycle
 Reconnaissance —> Information Analysis —> Build Trust —> Exploitation —> Execution —> Exit
 ## Main Goals
@@ -2129,6 +2155,12 @@ Reconnaissance —> Information Analysis —> Build Trust —> Exploitation —>
 |Eavesdropping|Listen Secretly|
 |Dumpster Diving|Search Trash|
 |Reverse Social Engineering|Victim Contacts Attacker|
+|Vishing|Voice/phone pretext call|
+|Diversion Theft|Trick delivery to wrong place|
+|Honey Trap|Fake romantic/online lure|
+|Baiting|Leave infected media/USB|
+|Quid Pro Quo|"Service" in exchange for info|
+|Elicitation|Casual conversation to extract info|
 ## Tailgating vs Piggybacking
 |Tailgating|Piggybacking|
 |---|---|
@@ -2166,6 +2198,10 @@ Reconnaissance —> Information Analysis —> Build Trust —> Exploitation —>
 * Unexpected Attachments
 * Requests for OTPs
 * Poor or Unexpected Context
+## Other Computer-Based Techniques
+Phishing, Spam, Instant-messaging abuse, Pop-up window attacks, Scareware, Deepfake videos, Voice cloning.
+## Mobile-Based Social Engineering
+Malicious apps, Fake apps, Repackaged apps, QR-code attacks (quishing), SMS phishing (smishing).
 ---
 # 91. Physical Social Engineering
 ## Physical Attacks
@@ -2191,6 +2227,11 @@ Reconnaissance —> Information Analysis —> Build Trust —> Exploitation —>
 # 92. Social Engineering Lifecycle & OSINT
 ## OSINT
 Open Source Intelligence means collecting publicly available information.
+## Phases of a Social Engineering Attack
+1. Research the target company
+2. Select a target (individual)
+3. Develop a relationship
+4. Exploit the relationship
 ## Passive vs Active Recon
 |Passive|Active|
 |---|---|
@@ -2305,11 +2346,14 @@ Unlike attacks that steal data, the primary objective is **availability disrupti
 * Exhaust connection tables
 * Crash applications
 * Prevent legitimate access
+## What DoS Attacks Consume/Disrupt
+Bandwidth · CPU · Memory · Connection/session resources · Disk space & data structures · Physical/network components · Programs/files.
 ## Characteristics
-* One attacking system
+* Single source (DoS) vs many sources (DDoS)
 * Targets one or more services
 * Resource exhaustion
 * Service disruption
+#### ⚠️ DoS is defined by **disrupting availability**, and DDoS by **distributed sources** — not strictly by "exactly one machine." The key DoS-vs-DDoS difference is the **distribution of attack sources**.
 ---
 # 98. Distributed Denial-of-Service (DDoS)
 ## What is DDoS?
@@ -2385,9 +2429,16 @@ Server eventually runs out of connections.
 ## HTTP Flood
 Legitimate-looking HTTP requests.
 Hard to distinguish from real traffic.
+## Phlashing (Permanent DoS / PDoS)
+Attack that **permanently damages** hardware — e.g. pushing malicious firmware that "bricks" a device. Recovery needs reinstall/replacement, not just a reboot.
 ---
 # 101. Reflection & Amplification Attacks
 Amplification attacks increase attack traffic using protocols with responses larger than requests.
+## Reflection vs Amplification
+|Reflection|Amplification|
+|---|---|
+|Send request to 3rd-party servers with **spoofed victim IP** → replies flood victim|Response is **much larger** than the request → multiplies volume|
+#### A single attack can be **both** reflective and amplifying (e.g. DNS/NTP amplification).
 ## Reflection Process
 Attacker —> Spoofs Victim IP —> Reflection Server —> Victim
 ## Amplification Protocols
