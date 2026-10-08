@@ -1245,6 +1245,13 @@ Cover Tracks
 * Execute Applications
 * Maintain Access
 * Cover Tracks
+## Steganography vs Cryptography vs Steganalysis
+|Term|What it does|
+|---|---|
+|**Steganography**|Hides the **existence** of data inside another medium (image, audio, file)|
+|**Cryptography**|Hides the **meaning** of data (reversible with a key)|
+|**Steganalysis**|Attempts to **detect** hidden data|
+Used in "Hide Files" step. Can be combined (encrypt *then* hide). Whitespace/ADS/image-LSB are common carriers.
 ---
 # 60. Password Attacks
 ## Password Storage
@@ -1257,6 +1264,14 @@ Passwords are stored as:
 |Authentication|Authorization|
 |---|---|
 |Who are you?|What can you access?|
+## Password Attack Categories (CEH's four)
+|Category|Meaning|Examples|
+|---|---|---|
+|Non-Electronic|No tech needed|Shoulder surfing, dumpster diving, social engineering|
+|Active Online|Interact with target directly|Brute force, password spraying, phishing|
+|Passive Online|Observe without interacting|Sniffing, MITM, replay|
+|Offline|Attack captured hashes|Dictionary, rainbow tables, rule-based|
+#### Online = slower & noisier (lockouts/logs). Offline = much faster once hashes are stolen.
 ## Attack Types
 |Attack|Description|
 |---|---|
@@ -1276,7 +1291,7 @@ Purpose:
 * Prevent identical hashes
 * Slow cracking
 ---
-# 61. Windows Password Storage
+# 61. Windows & Linux Password Storage
 ## SAM
 Stores:
 * Local Accounts
@@ -1285,6 +1300,19 @@ Location
 ```
 C:\Windows\System32\config\SAM
 ```
+## Credential Storage Locations (know these)
+|Location|Holds|
+|---|---|
+|`C:\Windows\System32\config\SAM`|Local account NTLM hashes|
+|Registry SYSTEM hive|Boot key to decrypt SAM|
+|**LSASS** (memory)|Hashes, Kerberos tickets, sometimes plaintext|
+|**NTDS.dit**|Active Directory domain account hashes (DC)|
+## Linux Password Storage
+|File|Contents|
+|---|---|
+|`/etc/passwd`|Account info (username, UID, shell) — **world-readable, no hashes normally**|
+|`/etc/shadow`|Actual password **hashes** — root-only|
+#### Exam trap: hashes live in **`/etc/shadow`**, not `/etc/passwd`.
 ## LM vs NTLM
 |LM|NTLM|
 |---|---|
@@ -1366,6 +1394,13 @@ Purpose:
 |---|---|
 |Fake TGT|Fake Service Ticket|
 |Entire Domain|One Service|
+|Forged with krbtgt hash|Forged with service account hash|
+## Keyloggers: Software vs Hardware
+|Software Keylogger|Hardware Keylogger|
+|---|---|
+|Program on the system|Physical device in keyboard/USB path|
+|Can be detected by AV/EDR|**Not** seen by AV (not software)|
+|Remotely installable|Needs physical access|
 ---
 # 64. Privilege Escalation
 ## Types
@@ -1387,6 +1422,8 @@ Purpose:
 #### PATH Hijacking —> Malicious executed before legitimate one.
 **"SUID = Someone Else's ID."**
 **"DLL = Windows, PATH = Linux."**
+#### ⚠️ Mnemonic, not a rule
+"DLL = Windows, PATH = Linux" is a memory aid. Windows **also** has PATH/search-order hijacking; the association is just *strongest* on each side. Privilege escalation abuses both **software vulnerabilities** and **misconfiguration** (weak service/file/registry permissions, unquoted service paths, misconfigured `sudo`, UAC bypass).
 ---
 # 65. Executing Applications
 ## Common Execution Methods
@@ -1558,9 +1595,29 @@ Examples:
 ### Virus vs Worm vs Trojan
 |Virus|Worm|Trojan|
 |---|---|---|
-|Needs Host|Standalone|Disguised|
-|Needs User Action|Automatic Spread|User Installs|
+|Needs Host/File|Standalone|Disguised|
+|Usually user-triggered|Automatic Spread|User Installs|
 |Self-Replicates|Self-Replicates|No Replication|
+#### ⚠️ A virus is defined by **replicating into a host/file**, not strictly by "must need user action." User interaction is often *part of* the chain but is not the defining trait. Worm = autonomous spread; Trojan = disguise (no self-replication).
+## Components of Malware (building blocks)
+|Component|Role|
+|---|---|
+|Crypter|Conceal/encrypt malware to evade AV|
+|Packer|Compress/obscure the executable|
+|Obfuscator|Make code hard to read/analyze|
+|Downloader|Pulls additional malicious code|
+|Dropper|Carries/installs the malware|
+|Injector|Injects code into running processes|
+|Exploit|Code that triggers the vulnerability|
+|Payload|Code that performs the malicious action|
+|Malicious Code|The core harmful logic|
+## PUA / PUP (Potentially Unwanted Applications)
+Not confirmed malware, but a security/privacy risk:
+* Adware, Dialers
+* Torrent/bundled software
+* Marketing/behavior-tracking software
+* Cryptomining/cryptojacking software
+#### PUA ≠ malware, but still unwanted.
 ---
 # 70. Malware Delivery Methods
 |Method|Description|
@@ -1576,6 +1633,15 @@ Examples:
 |Fake Software|Trojan Delivery|
 |Fake Updates|Fake Patch|
 |Supply Chain|Compromised Vendor|
+## Web-Based Distribution Techniques (named)
+* Black-hat SEO (poison search rankings)
+* Social-engineered clickjacking
+* Spear-phishing sites
+* Malvertising & compromised legitimate sites
+* Drive-by downloads
+* Spam emails & malicious attachments
+* RTF / document injection
+#### Also enters via: IM, removable media, browser/email bugs, poor patching, fake apps, network propagation. Attackers social-engineer the **delivery**, not just the exploit.
 ---
 # 71.0 Trojan Types
 |Trojan|Purpose|
@@ -1623,8 +1689,9 @@ Examples:
 |Triple Extortion|Steal + Encrypt + Pressure|
 |RaaS|Ransomware Rental|
 ### Encryption
-* **AES** → Encrypt Files
-* **RSA/ECC** → Encrypt AES Key
+* **AES** → Encrypt Files (fast symmetric)
+* **RSA/ECC** → Encrypt the AES key (so only attacker can recover it)
+#### This is the **hybrid encryption** pattern. It's the *common* ransomware design, not a universal rule — implementations vary.
 # 71.4 Rootkits
 |Rootkit|Purpose|
 |---|---|
@@ -1770,6 +1837,12 @@ Uses built-in tools: PowerShell, WMI, `mshta`, `rundll32`, `regsvr32`, `certutil
 * Behavioral / EDR monitoring
 * Script-block & PowerShell logging
 * Memory forensics
+## Overt vs Covert Channels
+|Overt Channel|Covert Channel|
+|---|---|
+|Legitimate, intended communication|Hidden, unintended path|
+|Normal app traffic|Smuggles data (e.g. via ICMP, DNS, timing)|
+RATs/Trojans often use **covert channels** to exfiltrate data unnoticed.
 ---
 # 78. Malware Countermeasures
 |Countermeasure|Purpose|
