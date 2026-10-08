@@ -3572,6 +3572,11 @@ Wi-Fi Discovery → GPS Mapping (wardriving) → Traffic Analysis → Launch Att
 # 155. Mobile Platform Attack Vectors (Module 17)
 ## OWASP Mobile Top 10 (themes)
 Improper Credential Usage, Inadequate Supply Chain Security, Insecure Auth/Authorization, Insufficient Input/Output Validation, Insecure Communication, Inadequate Privacy, Insufficient Binary Protection, Security Misconfiguration, Insecure Data Storage, Insufficient Cryptography.
+## Anatomy of a Mobile Attack — 3 Points
+1. **The device** (OS, apps, storage)
+2. **The network** (Wi-Fi, carrier, MITM)
+3. **The data center / cloud** (backend, APIs)
+A compromise can chain across all three.
 ## Common Vectors
 * Malicious apps / repackaged apps
 * SMS phishing (smishing)
@@ -3579,6 +3584,14 @@ Improper Credential Usage, Inadequate Supply Chain Security, Insecure Auth/Autho
 * Insecure communication (no TLS / weak pinning)
 * Excessive permissions
 * Jailbreak / root exposure
+## App-Store Security Risks
+Insufficient vetting · malicious/repackaged apps · third-party app stores · apps requesting excessive permissions · malicious updates / supply-chain issues.
+## App Sandboxing
+Each app is isolated from others' data/resources. A **vulnerable sandbox or sandbox escape** greatly increases a malicious app's impact.
+## Network-Based Mobile Attacks
+Open/weak Wi-Fi · rogue AP · sniffing · MITM · session hijacking · DNS poisoning · SSLStrip · fake SSL certificates.
+## SMS Phishing (Smishing) — why it works
+High open/read rates, short messages, urgency, shortened URLs, few security cues, easy to impersonate trusted brands. (**Mobile spam** = unsolicited SMS/MMS/IM with malicious links/attachments.)
 ---
 # 156. Android Hacking
 ## Architecture (top→bottom)
@@ -3587,6 +3600,8 @@ Applications → Application Framework → Libraries + Android Runtime (ART) →
 * Apps are **APK** files; code often in **DEX** (Dalvik/ART).
 * **Rooting** = gaining superuser (su) on Android.
 * Sideloading unknown APKs is a major risk.
+## Android Attack Concepts (recognition)
+Weak/no passcode · rooting · data caching · insecure password/data access · carrier-loaded (bloatware) apps · untrusted code · weak update/security controls · excessive permissions.
 ## Tools
 |Tool|Purpose|
 |---|---|
@@ -3600,6 +3615,8 @@ Applications → Application Framework → Libraries + Android Runtime (ART) →
 ## Key Points
 * **Jailbreaking** removes Apple's restrictions (adds root/sideloading).
 * Sandboxed apps; signed via App Store.
+## iOS Attack Concepts (recognition)
+Jailbreaking · data caching · weak protected credential/data storage · carrier/preinstalled apps · untrusted user-generated code · device-management weaknesses.
 ## Jailbreak Types
 |Type|Persists Reboot?|Notes|
 |---|---|---|
@@ -3638,21 +3655,36 @@ Edge/Device → Communication/Network → Middleware/Cloud → Application
 |Zigbee / Z-Wave|Low-power mesh|
 |BLE|Bluetooth Low Energy|
 |LoRaWAN|Long range, low power|
+### More IoT Protocols (recognition)
+NFC · Wi-Fi / Wi-Fi Direct · Thread · ANT · 6LoWPAN · Sigfox · NB-IoT · VSAT · Cellular · LWM2M · XMPP · Ethernet · PLC.
+## IoT Operating Systems (recognition)
+Windows 10 IoT · Amazon FreeRTOS · Fuchsia · RIOT · Ubuntu Core · ARM mbed OS · Zephyr · Embedded Linux · NuttX · Integrity RTOS · Apache Mynewt · Tizen.
 ## IoT Communication Models
-Device-to-Device, Device-to-Cloud, Device-to-Gateway, Back-End Data-Sharing.
+|Model|Flow|
+|---|---|
+|Device-to-Device|Devices talk directly|
+|Device-to-Cloud|Device → cloud service|
+|Device-to-Gateway|Device → local gateway → cloud|
+|Back-End Data-Sharing|Cloud data shared with 3rd parties|
+## IoT Challenges
+Interoperability · weak vendor support · hard-to-update firmware · poor physical security · resource/scalability limits · power constraints · compliance · legacy integration · huge unstructured data.
 ---
 # 160. IoT Threats & OWASP IoT Top 10
-## OWASP IoT Top 10 (highlights)
-1. Weak/Guessable/Hardcoded Passwords
+## OWASP IoT Top 10 (exact module wording)
+1. Weak, Guessable, or Hardcoded Passwords
 2. Insecure Network Services
 3. Insecure Ecosystem Interfaces
-4. Lack of Secure Update Mechanism
-5. Insecure/Outdated Components
+4. Lack of Secure Update Mechanisms
+5. Use of Insecure or Outdated Components
 6. Insufficient Privacy Protection
-7. Insecure Data Transfer/Storage
+7. Insecure Data Transfer and Storage
 8. Lack of Device Management
 9. Insecure Default Settings
 10. Lack of Physical Hardening
+## IoT Attack Surface Areas
+Ecosystem · device memory · firmware · network services · device interfaces · cloud web interface · local data storage · mobile app · authentication/authorization · third-party/vendor interfaces · hardware/sensors · network traffic/privacy.
+## Security Problems by Layer
+Application, network, mobile, cloud, and device layers all show recurring issues: weak auth, no auto-updates, poor encryption, insecure storage, weak comms controls, poor device management.
 ## Notable
 * **Mirai botnet** → infected IoT via default creds, launched massive DDoS.
 ## IoT Hacking Methodology
