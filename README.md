@@ -53,6 +53,3 @@ Personal study material and a self-made practice package for the **CEH v13 Knowl
 - **Time:** 4 hours
 
 ---
-
-## Disclaimer
-Unofficial, personal study material. Not affiliated with or endorsed by EC-Council. The practice guide and mock exams were written from these study notes, the CEH v13 syllabus, and the *All-in-One Exam Guide* for self-practice; they are not official EC-Council questions and do not reproduce the real exam. CEH is a trademark of EC-Council.
