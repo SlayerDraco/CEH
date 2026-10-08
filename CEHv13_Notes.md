@@ -3137,9 +3137,22 @@ Web Server.
 ### Three-Tier Architecture
 |Layer|Function|
 |---|---|
-|Presentation|User interface|
+|Presentation|User interface (client)|
 |Application|Business logic|
 |Data|Database/data storage|
+## Vulnerability Stack (layers of attack surface)
+A web app sits on a stack; a weakness in **any** layer can be the entry point:
+```
+Custom Web App / Business Logic   (top)
+Third-Party Components
+Web Server
+Database
+Operating System
+Network (router/switch)
+Security Controls
+```
+## ⚠️ Client-Side vs Server-Side Validation
+Client-side checks (JavaScript, hidden fields, disabled buttons) run in the **user's browser** and can be bypassed with a proxy. **Security-critical validation and authorization must be enforced server-side.**
 ---
 # **135. Web Services**
 ## Definition
@@ -3367,13 +3380,14 @@ Footprint Web Infrastructure → Analyze Web Apps → Bypass Client-Side Control
 * Strong auth + MFA + secure sessions
 * WAF, security headers (CSP, HSTS, X-Frame-Options)
 * Patch components, least privilege, logging & monitoring
+#### ⚠️ A WAF inspects HTTP(S) and blocks known patterns, but it is **not** a substitute for secure code — weak rules can be evaded. Treat it as a supplemental control.
 ---
 ---
 # 146. SQL Injection — Concepts (Module 15)
 ## Definition
-Inserting malicious SQL into an application's query to read, modify, or destroy database data or bypass authentication.
+SQL injection happens when attacker-controlled input is interpreted as part of the **SQL query structure** because the app fails to separate **data from executable query logic** — letting the attacker read, modify, or destroy data or bypass authentication.
 ## Why It Happens
-User input is concatenated directly into SQL without validation or parameterization.
+String concatenation of user input into SQL is the classic cause, but the core weakness is **data being treated as code** (fixed by parameterization, not just filtering).
 ## Classic Auth Bypass
 `' OR '1'='1' -- ` → makes the WHERE clause always true.
 ## Impact
@@ -3446,14 +3460,42 @@ Identify Input → Detect SQLi → Determine DB Type → Extract Schema (DBs →
 |802.11ax (Wi-Fi 6)|2.4/5/6 GHz|~9.6 Gbps|
 ## Antenna Types
 Omnidirectional, Directional, Yagi, Parabolic Grid, Dipole.
+## Other 802.15/802.16 Standards
+|Standard|Technology|
+|---|---|
+|802.15.1|Bluetooth|
+|802.15.4|Low-rate PAN (Zigbee)|
+|802.15.5|Wireless mesh|
+|802.16|WiMAX|
+## ⚠️ Association vs Authentication
+|Association|Authentication|
+|---|---|
+|Client **connects/associates** with an AP|AP/network **verifies** the client before granting access|
+Not synonyms — association is the link; authentication is identity proof.
+## WPA/WPA2 Authentication Modes
+|Mode|How|
+|---|---|
+|Personal (PSK)|Shared pre-shared key|
+|Enterprise (802.1X)|Central auth via RADIUS/EAP, per-user credentials|
 ---
 # 151. Wireless Encryption
 |Protocol|Encryption|Weakness|
 |---|---|---|
-|WEP|RC4 + 24-bit IV|Broken — IV reuse, crackable in minutes|
-|WPA|TKIP + RC4|Better, still weak|
-|WPA2|AES-CCMP|Strong; vulnerable to KRACK & weak PSK|
-|WPA3|SAE (Dragonfly)|Current standard; forward secrecy|
+|WEP|RC4 + 24-bit IV + CRC-32 ICV|Broken — IV reuse, crackable in minutes|
+|WPA|TKIP + RC4|Better, still weak (TKIP)|
+|WPA2|AES-CCMP|Strong **if** strong PSK/config; KRACK, weak-PSK risk|
+|WPA3|SAE (Dragonfly)|Modern; resists offline password cracking|
+## WEP Structure (high-yield)
+* **RC4** stream cipher
+* **24-bit IV** (too small → reuse)
+* **CRC-32 ICV** integrity check (weak)
+* Poor key management / IV reuse = core flaw
+## Know the Security Mechanism, Not Just "Strong/Weak"
+* **WPA** → TKIP/RC4
+* **WPA2** → AES-CCMP
+* **WPA3-Personal** → **SAE**, resists offline dictionary attacks
+* **WPA3-Enterprise** → stronger 192-bit enterprise suite
+#### ⚠️ "WPA2 = strong" and "WPA3 = forward secrecy" are incomplete. WPA2 security still depends on PSK strength/config; WPA3's headline is **SAE + offline-attack resistance** (forward secrecy is one part).
 ## Key Facts
 * **WEP** uses a weak **24-bit IV** → the core flaw.
 * **WPA2-PSK** handshakes can be captured and brute-forced offline.
@@ -3470,6 +3512,18 @@ Omnidirectional, Directional, Yagi, Parabolic Grid, Dipole.
 |KRACK|Key reinstallation attack on WPA2|
 |WPS PIN Attack|Brute-force 8-digit WPS PIN (Reaver)|
 |aLTEr / Karma|Target client probe behavior|
+## Wireless Threat Categories (scenario grouping)
+|Category|Example attacks|
+|---|---|
+|Access-Control|Rogue AP, MAC spoofing, unauthorized association|
+|Integrity|Frame injection, data tampering|
+|Confidentiality|Eavesdropping, traffic analysis, evil twin|
+|Availability|Jamming, deauth flood, beacon flood|
+|Authentication|PSK cracking, identity theft, shared-key guessing|
+## More Attack Names (recognition)
+Misconfigured AP · SSID broadcast abuse · ad-hoc connection attack · promiscuous/mis-association client · unauthorized association · beacon flood · AP theft · EAP-failure · authentication flood · ARP poisoning · power-saving attack · TKIP MIC exploit.
+## Authentication Attacks
+WPA-PSK cracking · LEAP cracking · VPN/domain login cracking · key reinstallation (KRACK) · identity theft · shared-key guessing · application-login theft.
 ## Deauth → Handshake Capture
 Deauth client → client reconnects → capture 4-way handshake → crack PSK offline.
 ---
@@ -3489,11 +3543,18 @@ Wi-Fi Discovery → GPS Mapping (wardriving) → Traffic Analysis → Launch Att
 * Reaver / Bully (WPS)
 * Wireshark (analysis)
 * Fern / Wifiphisher (evil twin)
+## WPS Discovery
+`wash -i <mon-iface>` lists **WPS-enabled APs** (channel, output options, survey mode) → candidates for Reaver/Bully PIN attacks.
+## War Driving / War Chalking
+* **War driving** → moving around mapping Wi-Fi (often with GPS).
+* **War chalking** → marking symbols (in chalk) to advertise a discovered network's SSID/type/security. Know the concept + symbols.
 ## Bluetooth Attacks
 |Attack|Meaning|
 |---|---|
+|Bluesmacking|Bluetooth DoS (oversized ping)|
 |Bluejacking|Send unsolicited messages|
-|Bluesnarfing|Steal data|
+|Bluesniffing|Discovery/sniffing of devices|
+|Bluesnarfing / Bluescarfing|Steal data from the device|
 |Bluebugging|Take control of device|
 |BlueBorne|RCE over Bluetooth|
 ---
@@ -3502,7 +3563,7 @@ Wi-Fi Discovery → GPS Mapping (wardriving) → Traffic Analysis → Launch Att
 * Disable **WPS**
 * Disable SSID-based trust; use **802.1X / EAP** (enterprise)
 * Wireless IDS/IPS (detect rogue/evil twin)
-* MAC filtering (weak, supplemental only)
+* MAC filtering (weak, supplemental only — **MACs are easily sniffed and spoofed**, so it is an administrative control, not real security)
 * Reduce signal leakage / AP placement
 * Change default admin creds & firmware updates
 * VPN over untrusted Wi-Fi
