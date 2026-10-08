@@ -2582,12 +2582,25 @@ Server Identifies User
 ## Passive vs Active
 |Passive|Active|
 |---|---|
-|Observe Traffic|Modify Traffic|
-|Sniffing|Fixation / MITM|
+|Observe Traffic|Take over / participate in the session|
+|Sniffing|Fixation / MITM / command injection|
+## Network-Level vs Application-Level
+|Network-Level|Application-Level|
+|---|---|
+|Hijack TCP/UDP session|Steal/use app session IDs|
+|Sequence numbers, IP/port|HTTP cookies/tokens|
 ---
 # 107. TCP Session Hijacking
 ## Definition
 Taking over an **existing TCP connection** by injecting packets with valid sequence numbers.
+## Session Hijacking Process (3 steps)
+1. **Track** the connection (find an active session, IPs, ports)
+2. **Desynchronize** the connection (disrupt sequence numbers)
+3. **Inject** attacker's packets/commands into the session
+## Sequence Numbers (exam focus)
+* Each ACK **advances** the expected sequence number.
+* The **TCP window size** sets the range of sequence numbers the host will accept.
+* To inject successfully, the attacker's packet must carry a sequence number **inside that window**.
 ## Requirements
 * Active TCP Session
 * Correct Sequence Numbers
@@ -2598,6 +2611,11 @@ Taking over an **existing TCP connection** by injecting packets with valid seque
 |---|---|
 |Guess Sequence Numbers|Observe Traffic|
 |Difficult|Easier|
+## ⚠️ Spoofing vs Hijacking
+|Spoofing|Hijacking|
+|---|---|
+|Pretend to be another source/identity|Take over an **already-established** session|
+Spoofing can *help* a hijack, but they are **not** synonyms.
 ---
 # 108. Session Hijacking Tools
 ## Common Tools
@@ -2658,6 +2676,12 @@ A security device that **monitors network or host activity** and **generates ale
 * Passive
 * Monitoring
 * Alert Generation
+### NIDS vs HIDS
+|NIDS (Network)|HIDS (Host)|
+|---|---|
+|Monitors network traffic|Monitors one host's activity|
+|Placed at choke points / SPAN port|Installed on the endpoint|
+|Sees traffic, not host internals|Sees files, logs, processes, registry|
 ---
 # 111. IPS (Intrusion Prevention System)
 ### Definition
@@ -2904,6 +2928,13 @@ Client —> Web Server —> Application Server —> Database
 * Security
 * Performance
 * Separation of duties
+## Apache Architecture (modular)
+Apache = HTTP core + loadable **modules**. Common modules:
+* Authentication (`mod_auth*`)
+* SSL/TLS (`mod_ssl`)
+* URL rewriting (`mod_rewrite`)
+* Proxy (`mod_proxy`)
+#### Key idea: web-server functionality is **modular** — disable unneeded modules to shrink the attack surface. (IIS is the Windows counterpart.)
 ---
 # 125. Web Server Attacks
 ## Definition
