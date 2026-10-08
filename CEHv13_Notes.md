@@ -3725,11 +3725,22 @@ Modbus, DNP3, PROFINET, OPC — often **no authentication/encryption**.
 |PaaS|Apps, data|App Engine, Heroku|
 |SaaS|Just use it|Gmail, Office 365|
 ## Deployment Models
-Public, Private, Hybrid, Community, **Multi-Cloud**.
+Public · Private · Hybrid · Community · **Multi-Cloud** · Distributed cloud · Poly cloud.
+## Cloud Actors / Roles (NIST)
+|Role|Does|
+|---|---|
+|Cloud Consumer|Uses the service|
+|Cloud Provider|Delivers the service|
+|Cloud Carrier|Connectivity/transport between them|
+|Cloud Auditor|Independent assessment/audit|
+|Cloud Broker|Manages use/performance/delivery between consumer & provider|
+## Expanded Service Models
+Beyond IaaS/PaaS/SaaS: **IDaaS** (identity), **SECaaS** (security), **CaaS** (container), **FaaS** (function/serverless), **FWaaS** (firewall), **DaaS** (desktop/data), **MBaaS** (mobile backend), **XaaS** (anything). Core exam idea: **how much the provider manages vs the customer.**
 ## Key Characteristics (NIST)
 On-demand self-service, broad network access, resource pooling, rapid elasticity, measured service.
 ## Responsibility
 **Shared Responsibility Model** → provider secures "of the cloud" (infrastructure); customer secures "in the cloud" (data, config, access).
+#### ⚠️ The split **shifts by service model**: customer carries most in **IaaS**, progressively less infra in **PaaS/SaaS** — but always owns its own **data, identities, and configuration**.
 ---
 # 163. Cloud Technologies & Containers
 ## Virtualization vs Containers
@@ -3744,6 +3755,10 @@ On-demand self-service, broad network access, resource pooling, rapid elasticity
 Run code without managing servers (AWS Lambda) — attack surface shifts to functions/permissions.
 ## Cloud-Native Concepts
 Microservices, CI/CD, IaC (Terraform), API-driven.
+## OWASP Kubernetes Top 10 (themes)
+Insecure workload configs · supply-chain vulns · overly permissive RBAC · no centralized policy · poor logging/monitoring · broken auth · missing network segmentation · secrets-management failures · misconfigured cluster components · outdated K8s components.
+## OWASP Serverless Top 10 (themes)
+Injection · broken auth · sensitive data exposure · XXE · broken access control · security misconfiguration · XSS · insecure deserialization · vulnerable components · insufficient logging/monitoring.
 ---
 # 164. Cloud Threats & Attacks
 |Threat/Attack|Description|
@@ -3757,6 +3772,12 @@ Microservices, CI/CD, IaC (Terraform), API-driven.
 |Container Escape|Break out of container to host|
 |SSRF → Metadata|Steal cloud IAM creds via `169.254.169.254`|
 |Privilege Escalation|Over-permissive IAM roles|
+|Service Hijacking|Via social engineering or network sniffing|
+|Wrapping Attack|Tamper with a SOAP message so a malicious request is processed as legitimate|
+|Man-in-the-Cloud (MITC)|Steal sync tokens → hijack cloud account without a password|
+|Side-Channel / Cross-Guest|Malicious VM exploits **shared physical resources** to infer another tenant's data (timing/cache)|
+## OWASP Top 10 Cloud Risks (themes)
+Accountability/data ownership · identity federation · compliance · business continuity · user privacy/secondary use · service & data integration · multi-tenancy/physical security · incident/forensic support · infrastructure security · non-production environment exposure.
 ## Cloud Attack Tools
 Nimbostratus, Trufflehog (secrets), ScoutSuite, Prowler, Pacu (AWS exploitation), S3Scanner.
 ---
@@ -3785,23 +3806,35 @@ Confidentiality, Integrity, Authentication, Non-Repudiation.
 Asymmetric exchanges a symmetric **session key**; symmetric encrypts the bulk data (e.g., TLS).
 ---
 # 167. Symmetric & Asymmetric Algorithms
-## Symmetric
-|Algorithm|Notes|
+#### 🎯 Exam gold: for any algorithm know **(1) key length** and **(2) block vs stream**.
+## Symmetric Algorithms (key + type)
+|Algorithm|Type|Key / Block facts|
+|---|---|---|
+|DES|Block|56-bit key — obsolete/weak|
+|3DES|Block|168-bit (classic) — slow, legacy|
+|AES|Block|128/192/256-bit key; 128-bit block (Rijndael)|
+|IDEA|Block|128-bit key|
+|Blowfish|Block|64-bit block; 32–448-bit key|
+|Twofish|Block|up to 256-bit key|
+|RC2|Block|variable key|
+|RC4|**Stream**|variable key — legacy/insecure|
+|RC5|Block|variable block (32/64/128)|
+|RC6|Block|128-bit block|
+|CAST-128|Block|64-bit block; ≤128-bit key|
+|CAST-256|Block|128-bit block; ≤256-bit key|
+|GOST|Block|64-bit block; 256-bit key|
+|Serpent / Camellia / TEA / Threefish|Block|CEHv13-listed block ciphers|
+|ChaCha20 / Salsa20|**Stream**|256-bit key|
+## Asymmetric Algorithms
+|Algorithm|Based On / Use|
 |---|---|
-|DES|56-bit key — broken|
-|3DES|168-bit effective — legacy|
-|AES|128/192/256-bit — current standard (block, Rijndael)|
-|RC4|Stream cipher — insecure (WEP/old TLS)|
-|Blowfish/Twofish|Block ciphers|
-## Asymmetric
-|Algorithm|Based On|
-|---|---|
-|RSA|Integer factorization|
+|RSA|Integer factorization — encrypt + sign|
 |Diffie-Hellman|Key exchange (discrete log)|
-|ECC|Elliptic curves (small keys, strong)|
+|ECC|Elliptic curves — small keys, strong|
 |DSA|Digital signatures|
+|ElGamal|Discrete-log public-key|
 ## Block vs Stream
-Block = fixed-size blocks (AES 128-bit); Stream = bit/byte at a time (RC4).
+Block = fixed-size blocks (AES 128-bit); Stream = bit/byte at a time (RC4, ChaCha20).
 ---
 # 168. Hashing & Integrity
 ## Definition
@@ -3815,27 +3848,40 @@ One-way function producing a fixed-length digest; used for integrity & password 
 |SHA-3|Keccak — modern|
 ## Related Concepts
 * **Salt** → random value added before hashing (defeats rainbow tables).
-* **HMAC** → hash + secret key → integrity **and** authenticity.
+* **HMAC** → hash + **shared secret key** → integrity + **message authentication** (proves the sender holds the shared key). ⚠️ It does **not** give public-key identity or non-repudiation.
 * **Collision** → two inputs, same hash (MD5/SHA-1 weakness).
 ---
 # 169. PKI & Digital Certificates
 ## PKI Components
 |Component|Role|
 |---|---|
-|CA|Issues/signs certificates|
-|RA|Verifies identity before issuance|
+|CA (Certification Authority)|Issues/signs certificates|
+|RA (Registration Authority)|Verifies identity before issuance|
+|VA (Validation Authority)|Confirms a cert's validity (revocation status)|
 |Certificate|Binds public key to identity (X.509)|
+|Certificate Management System|Stores/manages/distributes certs|
+|End User|Uses/holds the certificate|
 |CRL|Certificate Revocation List|
 |OCSP|Online revocation checking|
+## Digital Certificate Contents (X.509)
+Subject (identity) · Issuer (CA) · Validity period · Serial number · Public key · Signature algorithm · CA's digital signature · Key-usage fields.
+## CA-Signed vs Self-Signed
+|CA-Signed|Self-Signed|
+|---|---|
+|Trust via a trusted CA chain|Signed by itself|
+|Browsers trust it|No automatic third-party trust (warnings)|
 ## Digital Signature
-Sign = encrypt hash with **sender's private key**; verify with sender's **public key** → integrity + authentication + non-repudiation.
+Created with the **signer's private key**, verified with the **public key** → integrity + authentication + non-repudiation.
+#### ⚠️ "Encrypt the hash with the private key" is a **teaching simplification**. It's true for RSA-style signatures but not a literal description of every scheme (e.g. DSA/ECDSA). Memorize: **private key → sign, public key → verify.**
 ## Encryption vs Signature (asymmetric)
 |Goal|Key Used|
 |---|---|
 |Confidentiality|Encrypt with recipient's **public** key|
 |Signature|Sign with sender's **private** key|
 ## SSL/TLS
-TLS handshake authenticates server (cert) and negotiates a session key. Use **TLS 1.2/1.3**; SSL and TLS 1.0/1.1 are deprecated.
+TLS handshake authenticates server (cert) and negotiates a session key. HTTPS = HTTP over TLS → **confidentiality + integrity + server authentication** (not just "encryption"). Use **TLS 1.2/1.3**; SSL and TLS 1.0/1.1 are deprecated.
+## Applications of Cryptography
+Digital signatures · SSL/TLS · PGP · email encryption · disk encryption · blockchain.
 ---
 # 170. Cryptanalysis & Crypto Attacks
 |Attack|Description|
@@ -3851,8 +3897,15 @@ TLS handshake authenticates server (cert) and negotiates a session key. Use **TL
 |Rainbow Table|Precomputed hashes (defeated by salt)|
 |Padding Oracle|Exploit padding error responses|
 |DUHK / FREAK / POODLE / DROWN|Known TLS/SSL downgrade & RNG attacks|
+## Cryptanalysis Methods
+|Method|Goal|
+|---|---|
+|Linear|Find linear approximations of the cipher|
+|Differential|Study how input differences affect output|
+|Integral|Exploit sums over sets of inputs (block ciphers)|
+|Quantum|Use quantum algorithms (Shor/Grover) to break keys|
 ## Quantum Note
-Quantum computing threatens RSA/ECC → **Post-Quantum Cryptography (PQC)** is emerging.
+Quantum computing threatens classical public-key crypto (RSA/ECC via **Shor's algorithm**; halves symmetric strength via **Grover's**) → move to **Post-Quantum / quantum-resistant Cryptography (PQC)**.
 ---
 # 171. Cryptography Tools & Countermeasures
 ## Tools
@@ -3870,4 +3923,104 @@ Quantum computing threatens RSA/ECC → **Post-Quantum Cryptography (PQC)** is e
 * Salt + slow hashes (bcrypt, scrypt, Argon2, PBKDF2) for passwords
 * Enforce TLS 1.2/1.3, disable weak ciphers
 * Perfect Forward Secrecy (PFS)
+---
+# 172. Blockchain Fundamentals
+## What is Blockchain?
+A **distributed ledger**: a chain of **blocks** linked with cryptographic hashes.
+* Each block stores data + its own hash + the **previous block's hash**.
+* Changing any block breaks the hash link in every later block → **tamper-evident**.
+* Decentralized & consensus-driven (no single trusted authority).
+## Core Properties
+Decentralization · Immutability · Transparency · Consensus (PoW / PoS).
+---
+# 173. Blockchain Types & Attacks
+## Types of Blockchain
+|Type|Access|
+|---|---|
+|Public|Open to anyone (Bitcoin, Ethereum)|
+|Private|Single org, permissioned|
+|Federated / Consortium|Shared by a group of orgs|
+|Hybrid|Mix of public + private|
+## Blockchain Attacks
+|Attack|Meaning|
+|---|---|
+|51% Attack|One party controls majority mining/hash power → rewrite transactions|
+|Finney Attack|Pre-mine a block with a hidden transaction to double-spend|
+|Eclipse Attack|Isolate a node from honest peers (feed it a fake view)|
+|Race Attack|Exploit confirmation timing to double-spend|
+|DeFi Sandwich Attack|Front-run + back-run a victim trade to profit from price movement|
+---
+# 174. Quantum Computing Attacks
+## Why It Matters
+Quantum algorithms threaten classical cryptography — especially **public-key** schemes.
+* **Shor's algorithm** → breaks RSA/ECC (factoring / discrete log).
+* **Grover's algorithm** → halves effective symmetric key strength (AES-128 → ~64-bit security).
+* Defense direction: **Post-Quantum Cryptography (PQC)**.
+## Quantum Attack Vocabulary (recognition)
+Quantum cryptanalysis · quantum side-channel · classical-to-quantum transition · **harvest-now-decrypt-later** · quantum Trojan horse · quantum supply-chain · quantum-computer sabotage · fault-injection on quantum hardware · quantum DoS · quantum data eavesdropping · quantum bit-flipping · quantum error-correction exploitation · quantum replay.
+#### High-yield: **harvest-now, decrypt-later** = capture encrypted data today, decrypt once quantum computers mature.
+---
+---
+# 175. "Don't Confuse These" — High-Value Pairs
+|Pair|Correct Distinction|
+|---|---|
+|Authentication vs Authorization|Who are you? vs What can you do?|
+|Confidentiality vs Authentication|Prevent disclosure vs verify identity/source|
+|Reconnaissance vs Scanning|Broad info gathering vs active host/service discovery|
+|Scanning vs Enumeration|Find hosts/ports/services vs extract users/shares/details|
+|Vulnerability Assessment vs Pen Test|Find weaknesses vs validate/exploit impact|
+|IDS vs IPS|Detect/alert vs detect + actively block|
+|NIDS vs HIDS|Network visibility vs host visibility|
+|DoS vs DDoS|Single-source vs distributed availability attack|
+|Reflection vs Amplification|3rd-party responder vs 3rd-party responder + traffic multiplication|
+|Spoofing vs Hijacking|Impersonation vs taking over an existing session|
+|Passive vs Active Sniffing|Observe vs manipulate/inject|
+|Tailgating vs Piggybacking|Unauthorized following vs following with awareness/permission|
+|Virus vs Worm vs Trojan|Host-based replication vs autonomous spread vs disguised delivery|
+|Hashing vs Encryption|One-way digest vs reversible with key|
+|Digital Certificate vs Digital Signature|Identity/public-key binding vs proof made with a private key|
+|WEP vs WPA vs WPA2 vs WPA3|RC4/IV weakness vs TKIP vs AES-CCMP vs SAE|
+|Black vs White vs Gray box|No knowledge vs full knowledge vs limited knowledge|
+|LFI vs RFI|Include local file vs remote file|
+|XSS vs CSRF|Script runs in victim's browser vs victim's browser forced to act|
+|SSRF vs CSRF|**Server** makes attacker's request vs **victim browser** makes it|
+|IDOR vs Auth Failure|Access another object's data vs failure to establish identity/session|
+|Steganography vs Cryptography|Hide existence vs hide meaning|
+|IaaS vs PaaS vs SaaS|Customer manages most (IaaS) → least infra (SaaS)|
+|Association vs Authentication (Wi-Fi)|Connect to AP vs verify client identity|
+---
+# 176. Final Exam Priority Pass
+## Tier 1 — Must Know 🔴
+* Black/white/gray-box testing
+* Nmap options + TCP flags + port states
+* `nslookup` / `dig` / DNS zone transfer (AXFR)
+* Enumeration commands (nbtstat, net view, SMTP VRFY/EXPN)
+* CVE vs CVSS vs advisory
+* SAM / `/etc/shadow` / LSASS / NTDS.dit
+* Password attack categories (non-electronic / active / passive / offline)
+* Malware components + delivery techniques
+* Wireshark filters + Snort basics
+* Social engineering techniques + psychological triggers
+* Phlashing
+* Session hijacking: track → desync → inject; sequence numbers
+* IDS signature/anomaly/protocol + four alert types; NIDS vs HIDS
+* Firewall types + evasion categories
+* Web-server architecture/misconfiguration
+* OWASP Top 10 (2021)
+* SQLi types: error / UNION / Boolean / time / out-of-band
+* Wireless auth modes + WEP/WPA/WPA2/WPA3 mechanisms
+* Wireless threat categories + attack names
+* Mobile attack surface + app store + sandbox + Android/iOS concepts
+* Exact OWASP IoT Top 10
+* Cloud actors + deployment/service models
+* Cloud attacks: side-channel, wrapping, MITC
+* Crypto: key size + block/stream classification
+* PKI / CA / RA / VA / certificates / signatures
+* Blockchain basics + 51% / Finney / Eclipse / Race / sandwich
+* Cryptanalysis: linear / differential / integral / quantum
+* Quantum attack vocabulary
+## Tier 2 — Important 🟠
+War dialing · ICMP Type 3/Code 13 · NetBIOS name codes · NTP/NFS/RPC/SMTP enumeration differences · steganography/steganalysis · overt/covert channels · SPAN / hardware analyzers · smishing details · IoT protocol/OS recognition · expanded cloud services (FaaS, IDaaS, SECaaS, FWaaS) · certificate fields / self-signed certs.
+## Tier 3 — Recognition Only 🟢
+Historical tools, long vendor/tool lists, niche wireless/IoT protocols, product-specific names — learn after Tier 1 & 2.
 ---
